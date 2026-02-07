@@ -1,80 +1,67 @@
 <template>
-    <div style="max-width: 800px; margin: 40px auto; font-family: system-ui, sans-serif">
+    <div style="max-width: 900px; margin: 40px auto; font-family: system-ui, sans-serif">
         <h1>nuxt-request-labelize</h1>
-        <p>Ouvre DevTools &gt; Network pour voir les headers X-Request-Label</p>
+        <p>Open DevTools &gt; Network &gt; filter Fetch/XHR and look at the Name column</p>
 
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 24px">
-            <button @click="fetchSimple">
-                $fetch simple → label "power-global"
+        <section style="margin-top: 32px">
+            <h2>Without label</h2>
+            <p>10 identical calls. In Network: "power" x10, impossible to tell apart.</p>
+            <button style="padding: 10px 20px; font-size: 16px" @click="fetchWithoutLabels">
+                10 calls WITHOUT label
             </button>
-            <button @click="fetchWithUseFetch">
-                useFetch → label "notes-list"
+        </section>
+
+        <section style="margin-top: 32px">
+            <h2>With label</h2>
+            <p>10 calls with requestLabel. In Network: "power-1", "power-2"... "power-10"</p>
+            <button style="padding: 10px 20px; font-size: 16px" @click="fetchWithLabels">
+                10 calls WITH label
             </button>
-            <button @click="fetchLoop">
-                Boucle $fetch x5 → labels "power-1" a "power-5"
-            </button>
-            <button @click="fetchNative">
-                fetch natif → label "native-test"
-            </button>
-        </div>
+        </section>
 
         <pre
             v-if="result"
-            style="margin-top: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px; overflow: auto"
+            style="
+                margin-top: 24px;
+                padding: 16px;
+                background: #f5f5f5;
+                border-radius: 8px;
+                overflow: auto;
+                max-height: 400px;
+            "
         >{{ result }}</pre>
     </div>
 </template>
 
 <script setup lang="ts">
+const CALL_COUNT = 10
+
 const result = ref('')
 
-async function fetchSimple(): Promise<void> {
+async function fetchWithoutLabels(): Promise<void> {
     try {
-        const data = await $fetch('/api/power/global', {
-            requestLabel: 'power-global',
-        })
-        result.value = JSON.stringify(data, null, 2)
+        result.value = 'Firing 10 calls without labels...'
+        const promises = Array.from({ length: CALL_COUNT }, () => $fetch('/api/power'))
+        const data = await Promise.all(promises)
+        result.value = `Network: 10x "power" identical\n\n${JSON.stringify(data, null, 2)}`
     } catch (error) {
-        result.value = `Erreur: ${String(error)}`
+        result.value = `Error: ${String(error)}`
     }
 }
 
-async function fetchWithUseFetch(): Promise<void> {
+async function fetchWithLabels(): Promise<void> {
     try {
-        const { data } = await useFetch('/api/notes', {
-            requestLabel: 'notes-list',
-        })
-        result.value = JSON.stringify(data.value, null, 2)
+        result.value = 'Firing 10 calls with labels...'
+        const promises = Array.from({ length: CALL_COUNT }, (_, i) =>
+            $fetch('/api/power', {
+                requestLabel: 'power-{{index}}',
+                index: i + 1,
+            }),
+        )
+        const data = await Promise.all(promises)
+        result.value = `Network: "power-1", "power-2"... "power-10"\n\n${JSON.stringify(data, null, 2)}`
     } catch (error) {
-        result.value = `Erreur: ${String(error)}`
-    }
-}
-
-async function fetchLoop(): Promise<void> {
-    try {
-        const results = []
-        for (let i = 1; i <= 5; i++) {
-            const data = await $fetch(`/api/power/2026-0${i}`, {
-                requestLabel: 'power-{{index}}-{{path}}',
-                index: i,
-            })
-            results.push(data)
-        }
-        result.value = JSON.stringify(results, null, 2)
-    } catch (error) {
-        result.value = `Erreur: ${String(error)}`
-    }
-}
-
-async function fetchNative(): Promise<void> {
-    try {
-        const response = await fetch('/api/notes', {
-            requestLabel: 'native-test',
-        })
-        const data = await response.json()
-        result.value = JSON.stringify(data, null, 2)
-    } catch (error) {
-        result.value = `Erreur: ${String(error)}`
+        result.value = `Error: ${String(error)}`
     }
 }
 </script>

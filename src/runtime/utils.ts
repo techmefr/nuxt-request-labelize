@@ -7,3 +7,7 @@ export function resolveLabel(template: string, url: string, index?: number): str
 
     return result.replace(/\{\{path\}\}/g, url)
 }
+
+export function rewriteUrl(originalUrl: string, label: string): string {
+    return `/api/__label/${label}?_target=${encodeURIComponent(originalUrl)}`
+}

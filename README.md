@@ -1,16 +1,57 @@
+[English](./README.md) | [Francais](./docs/README.fr.md) | [Italiano](./docs/README.it.md) | [Espanol](./docs/README.es.md) | [Portugues](./docs/README.pt.md) | [中文](./docs/README.zh.md) | [Deutsch](./docs/README.de.md)
+
 # nuxt-request-labelize
 
-Module Nuxt pour ajouter des labels sur tous les appels reseau (`$fetch`, `useFetch`, `useLazyFetch`, `fetch` natif). Debug ultime : nom custom dans Network DevTools au lieu du nom d'endpoint.
+Nuxt module that adds custom labels to your network requests, visible directly in the **Name column** of DevTools Network tab.
 
-## Fonctionnalites
+## The problem
 
-- Intercepte tous les fetch Nuxt (composables + natif)
-- Labels dynamiques : `power-{{index}}` ou `{{path}}` auto
-- Controle par tableau d'environnements : `enabledEnvs: ['development']`
-- Header personnalisable : `X-Request-Label`
-- Zero overhead prod : desactive hors envs autorises
-- TypeScript complet avec IntelliSense
-- Templates integres : `{{index}}`, `{{path}}`
+You have a page that fires 10+ calls to `/api/power`. In DevTools Network, you see:
+
+```
+Name            Status
+power           200
+power           200
+power           200
+power           200
+...
+```
+
+Good luck finding the one you need.
+
+## The solution
+
+With `nuxt-request-labelize`, the same calls show:
+
+```
+Name            Status
+power-1         200
+power-2         200
+power-3         200
+power-4         200
+...
+```
+
+Each request gets a unique, meaningful name in the Network tab.
+
+## How it works
+
+The module rewrites labeled request URLs through a local proxy:
+
+```
+Client (browser)                 Nuxt (Nitro)              Backend
+  |                                |                         |
+  |  /api/__label/power-1          |                         |
+  |  ?_target=/api/power           |                         |
+  | -----------------------------> |                         |
+  |                                |  /api/power             |
+  |                                | ----------------------> |
+  |                                |                         |
+  |  Response                      |  Response               |
+  | <----------------------------- | <---------------------- |
+```
+
+The browser sees `/api/__label/power-1` in the Network tab (Name column shows `power-1`). The backend receives the original `/api/power` URL unchanged.
 
 ## Installation
 
@@ -28,30 +69,30 @@ export default defineNuxtConfig({
 })
 ```
 
-## Utilisation
+## Usage
 
-### Label simple
+### Simple label
 
 ```ts
 await $fetch('/api/power', {
   requestLabel: 'power-global'
 })
-// Network → X-Request-Label: power-global
+// Network Name: power-global
 ```
 
-### Boucle avec index
+### Loop with index template
 
 ```ts
-for (let i = 1; i <= 12; i++) {
-  await $fetch(`/api/power/2026-0${i}`, {
-    requestLabel: 'power-{{index}}-{{path}}',
+for (let i = 1; i <= 10; i++) {
+  await $fetch('/api/power', {
+    requestLabel: 'power-{{index}}',
     index: i
   })
 }
-// Network: power-1-/api/power/2026-01, power-2-/api/power/2026-02...
+// Network Name: power-1, power-2, ... power-10
 ```
 
-### Composables
+### With useFetch
 
 ```ts
 const { data } = await useFetch('/api/notes', {
@@ -59,31 +100,48 @@ const { data } = await useFetch('/api/notes', {
 })
 ```
 
-### Fetch natif
+### Available templates
 
-```ts
-const response = await fetch('/api/notes', {
-  requestLabel: 'native-fetch'
-})
-```
+| Template | Value |
+|----------|-------|
+| `{{index}}` | Value of the `index` option, or auto-increment |
+| `{{path}}` | URL path of the request |
 
-## Options
+## Configuration
 
 ```ts
 requestLabelize: {
-  enabledEnvs: ['development', 'staging'],  // NODE_ENV autorises (defaut: ['development'])
-  headerName: 'X-MyLabel'                   // Header custom (defaut: 'X-Request-Label')
+  enabledEnvs: ['development', 'staging'],  // Allowed NODE_ENV values (default: ['development'])
+  headerName: 'X-Request-Label'              // Bonus header name (default: 'X-Request-Label')
 }
 ```
 
-## Templates disponibles
+When the current `NODE_ENV` is not in `enabledEnvs`, the module is completely disabled: no plugin, no server route, zero overhead.
 
-| Template | Valeur |
-|----------|--------|
-| `{{path}}` | URL du fetch |
-| `{{index}}` | Valeur de l'option `index`, ou auto-increment |
+## Roadmap
 
-## Developpement
+### v1 (current)
+- [x] URL rewriting + proxy with label visible in Network tab Name column
+- [x] Dynamic templates (`{{index}}`, `{{path}}`)
+- [x] Environment-based activation
+- [x] Bonus `X-Request-Label` header
+
+### v2 (planned)
+- [ ] Obfuscate mode: hide real endpoints in production
+  - Server-side mapping only, client never sees the real URL
+  - Browser shows an opaque hash instead of the actual endpoint
+  - Config:
+```ts
+requestLabelize: {
+  mode: 'obfuscate',
+  routes: {
+    'a1b2': '/api/users',
+    'c3d4': '/api/power',
+  }
+}
+```
+
+## Development
 
 ```bash
 git clone <repo>
@@ -94,6 +152,6 @@ npm run build     # Build module
 npm run test      # Tests
 ```
 
-## Licence
+## License
 
 [MIT](LICENSE)

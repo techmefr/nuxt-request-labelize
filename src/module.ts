@@ -1,4 +1,10 @@
-import { defineNuxtModule, addPlugin, addTypeTemplate, createResolver } from '@nuxt/kit'
+import {
+    defineNuxtModule,
+    addPlugin,
+    addTypeTemplate,
+    addServerHandler,
+    createResolver,
+} from '@nuxt/kit'
 
 export interface ModuleOptions {
     enabledEnvs: string[]
@@ -51,6 +57,11 @@ export default defineNuxtModule<ModuleOptions>({
         addPlugin({
             src: resolver.resolve('./runtime/plugin.client'),
             mode: 'client',
+        })
+
+        addServerHandler({
+            route: '/api/__label/**',
+            handler: resolver.resolve('./runtime/server/proxy'),
         })
     },
 })
