@@ -1,0 +1,36 @@
+{
+    "name": "nuxt-request-labelize",
+    "version": "1.0.0",
+    "description": "Custom labels on network requests for DevTools debugging",
+    "license": "MIT",
+    "author": "Gaetan Compigni",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/types.d.mts",
+            "import": "./dist/module.mjs"
+        }
+    },
+    "main": "./dist/module.mjs",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "nuxt-module-build build",
+        "dev": "nuxi dev playground",
+        "dev:build": "nuxi build playground",
+        "prepare": "nuxt-module-build build --stub && nuxi prepare playground",
+        "test": "vitest run",
+        "test:watch": "vitest watch"
+    },
+    "dependencies": {
+        "@nuxt/kit": "^3.14.0"
+    },
+    "devDependencies": {
+        "@nuxt/module-builder": "^1.0.0",
+        "@nuxt/schema": "^3.14.0",
+        "nuxt": "^3.14.0",
+        "typescript": "^5.6.0",
+        "vitest": "^2.1.0"
+    }
+}
