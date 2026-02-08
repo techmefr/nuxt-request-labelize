@@ -53,6 +53,8 @@ Client (navigateur)              Nuxt (Nitro)              Backend
 
 Le navigateur voit `/api/__label/power-1` dans l'onglet Network (la colonne Name affiche `power-1`). Le backend reçoit l'URL originale `/api/power` inchangée.
 
+> **Note SSR :** Lorsqu'une requête est exécutée pendant le SSR (rendu côté serveur), elle n'apparaît pas dans l'onglet Network du navigateur, car elle ne passe jamais par le client. Les labels de requête ne sont donc visibles que pour les requêtes côté client (après hydratation, navigation, rafraîchissement, etc).
+
 ## Installation
 
 ```bash

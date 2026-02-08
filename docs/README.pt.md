@@ -53,6 +53,8 @@ Client (navegador)               Nuxt (Nitro)              Backend
 
 O navegador vê `/api/__label/power-1` na aba Network (a coluna Name mostra `power-1`). O backend recebe a URL original `/api/power` inalterada.
 
+> **Nota SSR:** Quando uma requisição é executada durante o SSR (renderização do lado do servidor), ela não aparece na aba Network do navegador, pois nunca passa pelo cliente. As etiquetas das requisições são, portanto, visíveis apenas para requisições do lado do cliente (após hidratação, navegação, atualização, etc).
+
 ## Instalação
 
 ```bash
