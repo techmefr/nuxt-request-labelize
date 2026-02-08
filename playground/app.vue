@@ -41,7 +41,9 @@ const result = ref('')
 async function fetchWithoutLabels(): Promise<void> {
     try {
         result.value = 'Firing 10 calls without labels...'
-        const promises = Array.from({ length: CALL_COUNT }, () => $fetch('/api/power'))
+        const promises = Array.from({ length: CALL_COUNT }, (_, i) =>
+            $fetch(`/api/power?month=${i + 1}`),
+        )
         const data = await Promise.all(promises)
         result.value = `Network: 10x "power" identical\n\n${JSON.stringify(data, null, 2)}`
     } catch (error) {
@@ -53,7 +55,7 @@ async function fetchWithLabels(): Promise<void> {
     try {
         result.value = 'Firing 10 calls with labels...'
         const promises = Array.from({ length: CALL_COUNT }, (_, i) =>
-            $fetch('/api/power', {
+            $fetch(`/api/power?month=${i + 1}`, {
                 requestLabel: 'power-{{index}}',
                 index: i + 1,
             }),

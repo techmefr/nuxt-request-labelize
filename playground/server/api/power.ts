@@ -1,6 +1,7 @@
-export default defineEventHandler(() => {
+export default defineEventHandler(event => {
+    const { month } = getQuery(event)
     return {
-        month: Math.floor(Math.random() * 12) + 1,
+        month: month ? Number(month) : Math.floor(Math.random() * 12) + 1,
         value: Math.random(),
     }
 })
