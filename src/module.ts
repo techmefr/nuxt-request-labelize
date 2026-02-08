@@ -5,13 +5,9 @@ import {
     addServerHandler,
     createResolver,
 } from '@nuxt/kit'
+import type { IModuleOptions } from './types'
 
-export interface ModuleOptions {
-    enabledEnvs: string[]
-    headerName: string
-}
-
-export default defineNuxtModule<ModuleOptions>({
+export default defineNuxtModule<IModuleOptions>({
     meta: {
         name: 'nuxt-request-labelize',
         configKey: 'requestLabelize',

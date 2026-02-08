@@ -1,19 +1,9 @@
 import { defineNuxtPlugin, useRuntimeConfig } from '#imports'
+import type { IRequestLabelizeConfig, ILabeledOptions } from '../types'
 import { resolveLabel, rewriteUrl } from './utils'
 
-interface RequestLabelizeConfig {
-    headerName: string
-}
-
-interface LabeledOptions {
-    requestLabel?: string
-    index?: number
-    headers?: HeadersInit
-    [key: string]: unknown
-}
-
 export default defineNuxtPlugin(() => {
-    const { headerName } = useRuntimeConfig().public.requestLabelize as RequestLabelizeConfig
+    const { headerName } = useRuntimeConfig().public.requestLabelize as IRequestLabelizeConfig
 
     let autoIndex = 0
 
@@ -50,7 +40,7 @@ export default defineNuxtPlugin(() => {
 
     function processRequest(
         input: string | URL | Request,
-        opts: LabeledOptions,
+        opts: ILabeledOptions,
     ): { url: string; cleanOpts: Record<string, unknown> } {
         const originalUrl = getOriginalUrl(input)
         const path = extractPath(input)
@@ -73,7 +63,7 @@ export default defineNuxtPlugin(() => {
 
     const patched$Fetch = ((
         request: Parameters<typeof original$Fetch>[0],
-        opts?: LabeledOptions,
+        opts?: ILabeledOptions,
     ) => {
         if (!opts?.requestLabel) return original$Fetch(request, opts)
         const { url, cleanOpts } = processRequest(request as string | URL | Request, opts)
@@ -82,7 +72,7 @@ export default defineNuxtPlugin(() => {
 
     const patchedRaw = ((
         request: Parameters<typeof originalRaw>[0],
-        opts?: LabeledOptions,
+        opts?: ILabeledOptions,
     ) => {
         if (!opts?.requestLabel) return originalRaw(request, opts)
         const { url, cleanOpts } = processRequest(request as string | URL | Request, opts)
@@ -98,7 +88,7 @@ export default defineNuxtPlugin(() => {
     const originalFetch = globalThis.fetch
 
     globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
-        const opts = init as LabeledOptions | undefined
+        const opts = init as ILabeledOptions | undefined
         if (!opts?.requestLabel) return originalFetch(input, init)
         const { url, cleanOpts } = processRequest(input as string | URL | Request, opts)
         return originalFetch(url, cleanOpts as RequestInit)
